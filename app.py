@@ -68,7 +68,7 @@ if page == "Main Dashboard":
     avg_sleep = filtered_df["DurationAsleep"].mean() / 3600  # Convert seconds to hours
     avg_hr = filtered_df["HeartRateAvg"].mean()
 
-    total_programs = filtered_df["OrganizationName","ProgramName"].nunique()
+    total_programs = (filtered_df["OrganizationName"] + "_" + filtered_df["ProgramName"]).nunique()
     total_cohorts = filtered_df["CohortName"].nunique()
     total_cities = filtered_df["City"].nunique()
     total_age_groups = filtered_df["AgeGroup"].nunique()
