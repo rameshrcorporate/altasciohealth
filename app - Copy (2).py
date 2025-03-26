@@ -18,53 +18,48 @@ def load_data():
 with st.spinner("Loading data, please wait..."):
     df = load_data()
 
-st.title("Wellness & Activity Tracking Dashboard")
-page = st.radio("Select Analysis", ["Main Dashboard", "Steps Analysis", "Sleep Analysis", "Heart Rate Analysis", "Comparison Analysis","Survey Analysis"], horizontal=True)
+# Sidebar Filters
+st.sidebar.header("🔍 Filters")
+org_filter = st.sidebar.selectbox("Select Organization", ["All"] + list(df["OrganizationName"].dropna().unique()), key="org_filter")
+filtered_df = df[df["OrganizationName"] == org_filter] if org_filter != "All" else df
 
+cohort_filter = st.sidebar.selectbox("Select Cohort", ["All"] + list(filtered_df["CohortName"].dropna().unique()), key="cohort_filter")
+filtered_df = filtered_df[filtered_df["CohortName"] == cohort_filter] if cohort_filter != "All" else filtered_df
 
-# Sidebar Filters - Hide for Survey Analysis
-if page != "Survey Analysis":
-    st.sidebar.header("🔍 Filters")
-    org_filter = st.sidebar.selectbox("Select Organization", ["All"] + list(df["OrganizationName"].dropna().unique()), key="org_filter")
-    filtered_df = df[df["OrganizationName"] == org_filter] if org_filter != "All" else df
+program_filter = st.sidebar.selectbox("Select Program", ["All"] + list(filtered_df["ProgramName"].dropna().unique()), key="program_filter")
+filtered_df = filtered_df[filtered_df["ProgramName"] == program_filter] if program_filter != "All" else filtered_df
 
-    cohort_filter = st.sidebar.selectbox("Select Cohort", ["All"] + list(filtered_df["CohortName"].dropna().unique()), key="cohort_filter")
-    filtered_df = filtered_df[filtered_df["CohortName"] == cohort_filter] if cohort_filter != "All" else filtered_df
+gender_filter = st.sidebar.selectbox("Select Gender", ["All"] + list(filtered_df["ParticipantGender"].dropna().unique()), key="gender_filter")
+filtered_df = filtered_df[filtered_df["ParticipantGender"] == gender_filter] if gender_filter != "All" else filtered_df
 
-    program_filter = st.sidebar.selectbox("Select Program", ["All"] + list(filtered_df["ProgramName"].dropna().unique()), key="program_filter")
-    filtered_df = filtered_df[filtered_df["ProgramName"] == program_filter] if program_filter != "All" else filtered_df
+ethnicity_filter = st.sidebar.selectbox("Select Ethnicity", ["All"] + list(filtered_df["Ethnicity"].dropna().unique()), key="ethnicity_filter")
+filtered_df = filtered_df[filtered_df["Ethnicity"] == ethnicity_filter] if ethnicity_filter != "All" else filtered_df
 
-    gender_filter = st.sidebar.selectbox("Select Gender", ["All"] + list(filtered_df["ParticipantGender"].dropna().unique()), key="gender_filter")
-    filtered_df = filtered_df[filtered_df["ParticipantGender"] == gender_filter] if gender_filter != "All" else filtered_df
+age_group_filter = st.sidebar.selectbox("Select Age Group", ["All"] + list(filtered_df["AgeGroup"].dropna().unique()), key="age_group_filter")
+filtered_df = filtered_df[filtered_df["AgeGroup"] == age_group_filter] if age_group_filter != "All" else filtered_df
 
-    ethnicity_filter = st.sidebar.selectbox("Select Ethnicity", ["All"] + list(filtered_df["Ethnicity"].dropna().unique()), key="ethnicity_filter")
-    filtered_df = filtered_df[filtered_df["Ethnicity"] == ethnicity_filter] if ethnicity_filter != "All" else filtered_df
+city_filter = st.sidebar.selectbox("Select City", ["All"] + list(filtered_df["City"].dropna().unique()), key="city_filter")
+filtered_df = filtered_df[filtered_df["City"] == city_filter] if city_filter != "All" else filtered_df
 
-    age_group_filter = st.sidebar.selectbox("Select Age Group", ["All"] + list(filtered_df["AgeGroup"].dropna().unique()), key="age_group_filter")
-    filtered_df = filtered_df[filtered_df["AgeGroup"] == age_group_filter] if age_group_filter != "All" else filtered_df
+# Range Filters
+weight_range = st.sidebar.slider("Select Weight (Kg) Range", 10, 200, (10, 200), key="weight_filter")
+filtered_df = filtered_df[(filtered_df["WeightKg"] >= weight_range[0]) & (filtered_df["WeightKg"] <= weight_range[1])]
 
-    city_filter = st.sidebar.selectbox("Select City", ["All"] + list(filtered_df["City"].dropna().unique()), key="city_filter")
-    filtered_df = filtered_df[filtered_df["City"] == city_filter] if city_filter != "All" else filtered_df
+height_range = st.sidebar.slider("Select Height (Cm) Range", 70, 220, (70, 220), key="height_filter")
+filtered_df = filtered_df[(filtered_df["HeightCm"] >= height_range[0]) & (filtered_df["HeightCm"] <= height_range[1])]
 
-    # Range Filters
-    weight_range = st.sidebar.slider("Select Weight (Kg) Range", 10, 200, (10, 200), key="weight_filter")
-    filtered_df = filtered_df[(filtered_df["WeightKg"] >= weight_range[0]) & (filtered_df["WeightKg"] <= weight_range[1])]
+# Date Range Filter (Fixed to 2024-2025)
+from_date = st.sidebar.date_input("From Date", pd.to_datetime("2024-01-01"), key="from_date")
+to_date = st.sidebar.date_input("To Date", pd.to_datetime("2025-12-31"), key="to_date")
 
-    height_range = st.sidebar.slider("Select Height (Cm) Range", 70, 220, (70, 220), key="height_filter")
-    filtered_df = filtered_df[(filtered_df["HeightCm"] >= height_range[0]) & (filtered_df["HeightCm"] <= height_range[1])]
-
-    # Date Range Filter (Fixed to 2024-2025)
-    from_date = st.sidebar.date_input("From Date", pd.to_datetime("2024-01-01"), key="from_date")
-    to_date = st.sidebar.date_input("To Date", pd.to_datetime("2025-12-31"), key="to_date")
-
-    if from_date > to_date:
-        st.sidebar.error("❌ 'From Date' cannot be greater than 'To Date'. Please adjust the selection.")
-    else:
-        filtered_df = filtered_df[(filtered_df["RecordDate"] >= pd.to_datetime(from_date)) & (filtered_df["RecordDate"] <= pd.to_datetime(to_date))]
+if from_date > to_date:
+    st.sidebar.error("❌ 'From Date' cannot be greater than 'To Date'. Please adjust the selection.")
+else:
+    filtered_df = filtered_df[(filtered_df["RecordDate"] >= pd.to_datetime(from_date)) & (filtered_df["RecordDate"] <= pd.to_datetime(to_date))]
 
 # Main Page Navigation
-# st.title("Wellness & Activity Tracking Dashboard")
-# page = st.radio("Select Analysis", ["Main Dashboard", "Steps Analysis", "Sleep Analysis", "Heart Rate Analysis", "Comparison Analysis","Survey Analysis"], horizontal=True)
+st.title("Wellness & Activity Tracking Dashboard")
+page = st.radio("Select Analysis", ["Main Dashboard", "Steps Analysis", "Sleep Analysis", "Heart Rate Analysis", "Comparison Analysis"], horizontal=True)
 
 # Display the selected page
 if page == "Main Dashboard":
@@ -221,15 +216,9 @@ else:
         "Steps Analysis": "modules.step_analysis",
         "Sleep Analysis": "modules.sleep_analysis",
         "Heart Rate Analysis": "modules.heart_rate_analysis",
-        "Comparison Analysis": "modules.comparison_analysis",
-        "Survey Analysis": "modules.survey_analysis"
+        "Comparison Analysis": "modules.comparison_analysis"
     }
     
     if page in page_mapping:
         module = __import__(page_mapping[page], fromlist=['show_page'])
-        if page == "Survey Analysis":
-            st.sidebar.info("📌 Survey Analysis uses independent filters.")
-            module.show_page()  # ✅ Do NOT pass filtered_df
-        else:
-            module.show_page(filtered_df)  # ✅ Pass filtered_df only to other pages
-
+        module.show_page(filtered_df)
